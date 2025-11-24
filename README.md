@@ -18,7 +18,10 @@ npm install
 ```bash
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_OPENAI_API_KEY=your_openai_api_key
 ```
+
+   **Note:** The OpenAI API key is required for generating diagnostic tests. You can get one from [OpenAI](https://platform.openai.com/api-keys).
 
 4. Start the development server:
 ```bash
@@ -31,6 +34,7 @@ npm run dev
 
 - **Today's Tasks** - Route: `/`
 - **Courses** - Route: `/courses`
+- **Diagnostic Test** - Route: `/diagnostic/:courseId`
 
 ## Tech Stack
 

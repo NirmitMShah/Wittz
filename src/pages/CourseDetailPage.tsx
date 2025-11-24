@@ -21,6 +21,7 @@ function CourseDetailPage() {
   const [editingCourse, setEditingCourse] = useState(false)
   const [courseName, setCourseName] = useState('')
   const [courseColor, setCourseColor] = useState('#3B82F6')
+  const [courseTestDate, setCourseTestDate] = useState('')
   const [showLectureForm, setShowLectureForm] = useState(false)
   const [lectureForm, setLectureForm] = useState({ name: '', content: '' })
 
@@ -41,6 +42,7 @@ function CourseDetailPage() {
         setCourse(data)
         setCourseName(data.name)
         setCourseColor(data.color)
+        setCourseTestDate(data.test_date.split('T')[0])
       }
     } catch (err: any) {
       setError(err.message || 'Failed to load course')
@@ -68,6 +70,7 @@ function CourseDetailPage() {
       const { data, error } = await updateCourse(courseId, {
         name: courseName,
         color: courseColor,
+        test_date: courseTestDate,
       })
       if (error) throw error
       if (data) {
@@ -85,6 +88,8 @@ function CourseDetailPage() {
     if (!courseId) return
 
     try {
+      setError(null)
+
       const input: CreateCourseContentInput = {
         course_id: courseId,
         name: lectureForm.name,
@@ -96,7 +101,6 @@ function CourseDetailPage() {
         setLectures([data, ...lectures])
         setLectureForm({ name: '', content: '' })
         setShowLectureForm(false)
-        setError(null)
       }
     } catch (err: any) {
       setError(err.message || 'Failed to create lecture')
@@ -164,42 +168,65 @@ function CourseDetailPage() {
                 style={{ backgroundColor: course.color }}
               />
               {editingCourse ? (
-                <form onSubmit={handleUpdateCourse} className="flex-1 flex items-center gap-4">
-                  <input
-                    type="text"
-                    value={courseName}
-                    onChange={(e) => setCourseName(e.target.value)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Course Name"
-                    required
-                  />
-                  <input
-                    type="color"
-                    value={courseColor}
-                    onChange={(e) => setCourseColor(e.target.value)}
-                    className="h-10 w-20 border border-gray-300 rounded-lg cursor-pointer"
-                  />
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingCourse(false)
-                      setCourseName(course.name)
-                      setCourseColor(course.color)
-                    }}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                  >
-                    Cancel
-                  </button>
+                <form onSubmit={handleUpdateCourse} className="flex-1 space-y-4">
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="text"
+                      value={courseName}
+                      onChange={(e) => setCourseName(e.target.value)}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Course Name"
+                      required
+                    />
+                    <input
+                      type="color"
+                      value={courseColor}
+                      onChange={(e) => setCourseColor(e.target.value)}
+                      className="h-10 w-20 border border-gray-300 rounded-lg cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="test_date" className="block text-sm font-medium text-gray-700 mb-1">
+                      Exam Date *
+                    </label>
+                    <input
+                      type="date"
+                      id="test_date"
+                      required
+                      value={courseTestDate}
+                      onChange={(e) => setCourseTestDate(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingCourse(false)
+                        setCourseName(course.name)
+                        setCourseColor(course.color)
+                        setCourseTestDate(course.test_date ? course.test_date.split('T')[0] : '')
+                      }}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </form>
               ) : (
                 <>
-                  <h1 className="text-3xl font-bold text-gray-900">{course.name}</h1>
+                  <div className="flex-1">
+                    <h1 className="text-3xl font-bold text-gray-900">{course.name}</h1>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Exam Date: {new Date(course.test_date).toLocaleDateString()}
+                    </p>
+                  </div>
                   <button
                     onClick={() => setEditingCourse(true)}
                     className="ml-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"

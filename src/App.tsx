@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import TodaysTasksPage from './pages/TodaysTasksPage'
 import CoursesPage from './pages/CoursesPage'
 import CourseDetailPage from './pages/CourseDetailPage'
+import CourseTasksPage from './pages/CourseTasksPage'
 import DiagnosticPage from './pages/DiagnosticPage'
 import LoginPage from './pages/LoginPage'
 import SignUpPage from './pages/SignUpPage'
@@ -39,6 +40,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CourseDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/courses/:courseId/tasks"
+              element={
+                <ProtectedRoute>
+                  <CourseTasksPage />
                 </ProtectedRoute>
               }
             />

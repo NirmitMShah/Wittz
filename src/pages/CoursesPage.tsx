@@ -14,6 +14,7 @@ function CoursesPage() {
   const [formData, setFormData] = useState<CreateCourseInput>({
     name: '',
     color: '#3B82F6',
+    test_date: '',
   })
 
   useEffect(() => {
@@ -43,7 +44,7 @@ function CoursesPage() {
       if (error) throw error
       if (data) {
         setCourses([data, ...courses])
-        setFormData({ name: '', color: '#3B82F6' })
+        setFormData({ name: '', color: '#3B82F6', test_date: '' })
         setShowCreateForm(false)
       }
     } catch (err: any) {
@@ -123,6 +124,19 @@ function CoursesPage() {
                   value={formData.color}
                   onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                   className="h-10 w-20 border border-gray-300 rounded-lg cursor-pointer"
+                />
+              </div>
+              <div>
+                <label htmlFor="test_date" className="block text-sm font-medium text-gray-700 mb-1">
+                  Exam Date *
+                </label>
+                <input
+                  type="date"
+                  id="test_date"
+                  required
+                  value={formData.test_date}
+                  onChange={(e) => setFormData({ ...formData, test_date: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <button

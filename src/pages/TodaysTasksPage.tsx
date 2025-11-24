@@ -98,7 +98,8 @@ function TodaysTasksPage() {
             {courses.map((course) => (
               <div
                 key={course.id}
-                className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow w-full"
+                onClick={() => navigate(`/courses/${course.id}/tasks`)}
+                className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow w-full cursor-pointer"
               >
                 <div className="flex items-center gap-4">
                   <div

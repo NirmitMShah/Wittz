@@ -54,6 +54,7 @@ export async function createCourse(
       name: input.name,
       color: input.color || '#3B82F6',
       diagnostic_taken: false,
+      test_date: input.test_date,
     })
     .select()
     .single()
@@ -73,6 +74,7 @@ export async function updateCourse(
     .update({
       ...(input.name && { name: input.name }),
       ...(input.color && { color: input.color }),
+      ...(input.test_date !== undefined && { test_date: input.test_date }),
     })
     .eq('id', id)
     .select()
@@ -136,6 +138,8 @@ export async function updateCourseContent(
     .update({
       ...(input.name && { name: input.name }),
       ...(input.content && { content: input.content }),
+      ...(input.mastery !== undefined && { mastery: input.mastery }),
+      ...(input.last_reviewed !== undefined && { last_reviewed: input.last_reviewed }),
     })
     .eq('id', id)
     .select()
