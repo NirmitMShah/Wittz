@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { appConfig } from '../config/appConfig'
 import type { CreateQuestionInput, Question, CourseContent, Course } from '../types/course'
 
 /**
@@ -63,7 +64,8 @@ export async function getQuestionByLectureAndDifficulty(
 }
 
 /**
- * Generate 10 questions using the priority algorithm based on mastery and days to exam
+ * Generate questions using the priority algorithm based on mastery and days to exam
+ * Number of questions is determined by appConfig.questionGeneration.targetQuestions
  */
 export async function generateTaskQuestions(
   course: Course,
@@ -84,15 +86,18 @@ export async function generateTaskQuestions(
   let masteryWeight: number
   let uniformWeight: number
 
-  if (daysToExam >= 7) {
-    masteryWeight = 0.9
-    uniformWeight = 0.1
-  } else if (daysToExam >= 3) {
-    masteryWeight = 0.5
-    uniformWeight = 0.5
+  const { longTermThreshold, shortTermThreshold } = appConfig.questionGeneration.daysToExam
+  const { longTerm, mediumTerm, shortTerm } = appConfig.questionGeneration.weights
+
+  if (daysToExam >= longTermThreshold) {
+    masteryWeight = longTerm.masteryWeight
+    uniformWeight = longTerm.uniformWeight
+  } else if (daysToExam >= shortTermThreshold) {
+    masteryWeight = mediumTerm.masteryWeight
+    uniformWeight = mediumTerm.uniformWeight
   } else {
-    masteryWeight = 0.1
-    uniformWeight = 0.9
+    masteryWeight = shortTerm.masteryWeight
+    uniformWeight = shortTerm.uniformWeight
   }
 
   // Calculate priorities for each lecture
@@ -124,19 +129,19 @@ export async function generateTaskQuestions(
     probability: lp.priority / totalPriority,
   }))
 
-  // Allocate questions proportionally (each lecture gets its proportion of 10 questions)
-  const TARGET_QUESTIONS = 10
+  // Allocate questions proportionally (each lecture gets its proportion of target questions)
+  const TARGET_QUESTIONS = appConfig.questionGeneration.targetQuestions
   const allocations = probabilities.map((prob) => ({
     ...prob,
     questionCount: Math.round(prob.probability * TARGET_QUESTIONS),
   }))
 
-  // Adjust to ensure exactly 10 questions total (largest remainder method)
+  // Adjust to ensure exactly target questions total (largest remainder method)
   const totalAllocated = allocations.reduce((sum, a) => sum + a.questionCount, 0)
   const difference = TARGET_QUESTIONS - totalAllocated
 
   if (difference !== 0) {
-    // Sort by remainder (probability * 10 - floor(probability * 10))
+    // Sort by remainder (probability * target - floor(probability * target))
     const withRemainders = allocations.map((a) => ({
       ...a,
       remainder: a.probability * TARGET_QUESTIONS - Math.floor(a.probability * TARGET_QUESTIONS),
@@ -164,23 +169,27 @@ export async function generateTaskQuestions(
       let difficulty: 'basic' | 'standard' | 'advanced'
       const random = Math.random()
 
-      if (m < 0.3) {
-        // 70% basic, 30% standard
-        difficulty = random < 0.7 ? 'basic' : 'standard'
-      } else if (m < 0.7) {
-        // 30% basic, 60% standard, 10% advanced
-        if (random < 0.3) {
+      const { lowMastery, mediumMastery } = appConfig.questionGeneration.masteryThresholds
+      const { lowMastery: lowDist, mediumMastery: medDist, highMastery: highDist } =
+        appConfig.questionGeneration.difficultyDistribution
+
+      if (m < lowMastery) {
+        // Low mastery distribution
+        difficulty = random < lowDist.basic ? 'basic' : 'standard'
+      } else if (m < mediumMastery) {
+        // Medium mastery distribution
+        if (random < medDist.basic) {
           difficulty = 'basic'
-        } else if (random < 0.9) {
+        } else if (random < medDist.basic + medDist.standard) {
           difficulty = 'standard'
         } else {
           difficulty = 'advanced'
         }
       } else {
-        // 10% basic, 50% standard, 40% advanced
-        if (random < 0.1) {
+        // High mastery distribution
+        if (random < highDist.basic) {
           difficulty = 'basic'
-        } else if (random < 0.6) {
+        } else if (random < highDist.basic + highDist.standard) {
           difficulty = 'standard'
         } else {
           difficulty = 'advanced'
@@ -213,7 +222,7 @@ export async function generateTaskQuestions(
         if (fallbackQuestion) {
           questions.push(fallbackQuestion)
         }
-        // If still no question, skip this slot (we'll have fewer than 10 questions)
+        // If still no question, skip this slot (we'll have fewer than target questions)
       }
     }
   }

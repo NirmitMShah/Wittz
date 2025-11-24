@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { appConfig } from '../config/appConfig'
 import type {
   Course,
   CreateCourseInput,
@@ -14,10 +15,32 @@ import type {
 export async function getCourses(): Promise<{ data: Course[] | null; error: any }> {
   const { data, error } = await supabase
     .from('courses')
-    .select('*')
+    .select(`
+      *,
+      course_contents(mastery)
+    `)
     .order('created_at', { ascending: false })
 
-  return { data, error }
+  if (error) {
+    return { data: null, error }
+  }
+
+  // Calculate average mastery for each course
+  const coursesWithMastery = (data || []).map((course: any) => {
+    const contents = course.course_contents || []
+    let mastery: number | undefined = undefined
+
+    if (contents.length > 0) {
+      const totalMastery = contents.reduce((sum: number, content: any) => sum + (content.mastery || 0), 0)
+      mastery = Math.round(totalMastery / contents.length)
+    }
+
+    // Remove the course_contents from the response
+    const { course_contents, ...courseData } = course
+    return { ...courseData, mastery }
+  })
+
+  return { data: coursesWithMastery, error: null }
 }
 
 /**
@@ -155,5 +178,52 @@ export async function deleteCourseContent(id: string): Promise<{ error: any }> {
   const { error } = await supabase.from('course_contents').delete().eq('id', id)
 
   return { error }
+}
+
+/**
+ * Get the lowest mastery course content below a threshold for each course
+ * Returns one course content per course (the lowest mastery lecture under the threshold)
+ */
+export async function getLowestMasteryContent(
+  threshold: number = appConfig.courseContent.defaultMasteryThreshold
+): Promise<{ data: (CourseContent & { course: Course })[]; error: any }> {
+  // Get all course contents with mastery below threshold, including course info
+  const { data, error } = await supabase
+    .from('course_contents')
+    .select(`
+      *,
+      courses(*)
+    `)
+    .lt('mastery', threshold)
+    .order('course_id', { ascending: true })
+    .order('mastery', { ascending: true })
+
+  if (error) {
+    return { data: [], error }
+  }
+
+  if (!data || data.length === 0) {
+    return { data: [], error: null }
+  }
+
+  // Group by course_id and pick the lowest mastery content per course
+  const seenCourses = new Set<string>()
+  const results: (CourseContent & { course: Course })[] = []
+
+  for (const content of data as any[]) {
+    const courseId = content.course_id as string
+    if (!courseId || seenCourses.has(courseId)) continue
+
+    seenCourses.add(courseId)
+    const course = content.courses as Course
+    const { courses, ...contentData } = content
+
+    results.push({
+      ...(contentData as CourseContent),
+      course,
+    })
+  }
+
+  return { data: results, error: null }
 }
 

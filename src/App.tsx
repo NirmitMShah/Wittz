@@ -7,6 +7,7 @@ import CoursesPage from './pages/CoursesPage'
 import CourseDetailPage from './pages/CourseDetailPage'
 import CourseTasksPage from './pages/CourseTasksPage'
 import DiagnosticPage from './pages/DiagnosticPage'
+import BlurtTaskPage from './pages/BlurtTaskPage'
 import LoginPage from './pages/LoginPage'
 import SignUpPage from './pages/SignUpPage'
 
@@ -56,6 +57,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DiagnosticPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/blurt/:contentId"
+              element={
+                <ProtectedRoute>
+                  <BlurtTaskPage />
                 </ProtectedRoute>
               }
             />

@@ -8,6 +8,7 @@ import {
   createCourseContent,
   deleteCourseContent,
 } from '../lib/courses'
+import { appConfig } from '../config/appConfig'
 import type { Course, CourseContent, CreateCourseContentInput } from '../types/course'
 
 function CourseDetailPage() {
@@ -24,6 +25,7 @@ function CourseDetailPage() {
   const [courseTestDate, setCourseTestDate] = useState('')
   const [showLectureForm, setShowLectureForm] = useState(false)
   const [lectureForm, setLectureForm] = useState({ name: '', content: '' })
+  const [expandedLectures, setExpandedLectures] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (user && courseId) {
@@ -114,9 +116,34 @@ function CourseDetailPage() {
       const { error } = await deleteCourseContent(id)
       if (error) throw error
       setLectures(lectures.filter((lecture) => lecture.id !== id))
+      setExpandedLectures((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(id)
+        return newSet
+      })
     } catch (err: any) {
       setError(err.message || 'Failed to delete lecture')
     }
+  }
+
+  const toggleLecture = (lectureId: string) => {
+    setExpandedLectures((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(lectureId)) {
+        newSet.delete(lectureId)
+      } else {
+        newSet.add(lectureId)
+      }
+      return newSet
+    })
+  }
+
+  const expandAllLectures = () => {
+    setExpandedLectures(new Set(lectures.map((lecture) => lecture.id)))
+  }
+
+  const collapseAllLectures = () => {
+    setExpandedLectures(new Set())
   }
 
   if (!user) {
@@ -243,12 +270,30 @@ function CourseDetailPage() {
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Lectures</h2>
-            <button
-              onClick={() => setShowLectureForm(!showLectureForm)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              {showLectureForm ? 'Cancel' : '+ Add Lecture'}
-            </button>
+            <div className="flex gap-2">
+              {lectures.length > 0 && (
+                <>
+                  <button
+                    onClick={expandAllLectures}
+                    className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                  >
+                    Expand All
+                  </button>
+                  <button
+                    onClick={collapseAllLectures}
+                    className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                  >
+                    Collapse All
+                  </button>
+                </>
+              )}
+              <button
+                onClick={() => setShowLectureForm(!showLectureForm)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                {showLectureForm ? 'Cancel' : '+ Add Lecture'}
+              </button>
+            </div>
           </div>
 
           {showLectureForm && (
@@ -298,26 +343,93 @@ function CourseDetailPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {lectures.map((lecture) => (
-                <div
-                  key={lecture.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-xl font-semibold text-gray-900">{lecture.name}</h3>
-                    <button
-                      onClick={() => handleDeleteLecture(lecture.id)}
-                      className="text-red-600 hover:text-red-800 text-sm font-medium"
-                    >
-                      Delete
-                    </button>
+              {lectures.map((lecture) => {
+                const isExpanded = expandedLectures.has(lecture.id)
+                return (
+                  <div
+                    key={lecture.id}
+                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <button
+                            onClick={() => toggleLecture(lecture.id)}
+                            className="text-gray-500 hover:text-gray-700 transition-colors"
+                            aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                          >
+                            <svg
+                              className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                          </button>
+                          <h3 className="text-xl font-semibold text-gray-900">{lecture.name}</h3>
+                        </div>
+                        <div className="flex items-center gap-4 mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-gray-600">Mastery:</span>
+                            <span
+                              className={`text-sm font-semibold ${
+                                lecture.mastery >= appConfig.masteryDisplay.thresholds.high
+                                  ? 'text-green-600'
+                                  : lecture.mastery >= appConfig.masteryDisplay.thresholds.medium
+                                    ? 'text-yellow-600'
+                                    : 'text-red-600'
+                              }`}
+                            >
+                              {lecture.mastery}%
+                            </span>
+                          </div>
+                          <div className="flex-1 max-w-xs">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full transition-all ${
+                                  lecture.mastery >= appConfig.masteryDisplay.thresholds.high
+                                    ? 'bg-green-500'
+                                    : lecture.mastery >= appConfig.masteryDisplay.thresholds.medium
+                                      ? 'bg-yellow-500'
+                                      : 'bg-red-500'
+                                }`}
+                                style={{ width: `${lecture.mastery}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteLecture(lecture.id)}
+                        className="text-red-600 hover:text-red-800 text-sm font-medium ml-4"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    {isExpanded && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <p className="text-gray-700 whitespace-pre-wrap mb-4">{lecture.content}</p>
+                        <div className="flex items-center gap-4">
+                          <p className="text-xs text-gray-400">
+                            Created {new Date(lecture.created_at).toLocaleDateString()}
+                          </p>
+                          {lecture.last_reviewed && (
+                            <p className="text-xs text-gray-400">
+                              Last reviewed: {new Date(lecture.last_reviewed).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-gray-700 whitespace-pre-wrap">{lecture.content}</p>
-                  <p className="text-xs text-gray-400 mt-2">
-                    Created {new Date(lecture.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

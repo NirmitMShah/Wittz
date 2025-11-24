@@ -7,6 +7,7 @@ export interface Course {
   test_date: string
   created_at: string
   updated_at: string
+  mastery?: number // Average mastery of all lectures in the course
 }
 
 export interface CreateCourseInput {

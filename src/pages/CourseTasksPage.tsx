@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { getCourseById, getCourseContents } from '../lib/courses'
 import { generateTaskQuestions } from '../lib/questions'
+import { appConfig } from '../config/appConfig'
 import type { Course, Question } from '../types/course'
 
 function CourseTasksPage() {
@@ -11,6 +12,7 @@ function CourseTasksPage() {
   const navigate = useNavigate()
   const [course, setCourse] = useState<Course | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState<Record<string, boolean>>({})
   const [showResults, setShowResults] = useState<Record<string, boolean>>({})
@@ -63,6 +65,7 @@ function CourseTasksPage() {
       }
 
       setQuestions(questionsData)
+      setCurrentQuestionIndex(0)
       setStarted(true)
       setAnswers({})
       setSubmitted({})
@@ -86,6 +89,14 @@ function CourseTasksPage() {
     }
     setSubmitted((prev) => ({ ...prev, [question.id]: true }))
     setShowResults((prev) => ({ ...prev, [question.id]: true }))
+  }
+
+  const goToPreviousQuestion = () => {
+    setCurrentQuestionIndex((prev) => Math.max(prev - 1, 0))
+  }
+
+  const goToNextQuestion = () => {
+    setCurrentQuestionIndex((prev) => Math.min(prev + 1, questions.length - 1))
   }
 
   const handleNext = () => {
@@ -145,7 +156,7 @@ function CourseTasksPage() {
           </h1>
           <div className="bg-white rounded-lg shadow-md p-8">
             <p className="text-gray-600 mb-6">
-              This will generate 10 personalized questions based on your mastery levels and exam date.
+              This will generate {appConfig.questionGeneration.targetQuestions} personalized questions based on your mastery levels and exam date.
               Questions are selected to help you focus on areas that need the most improvement.
             </p>
             {course && (
@@ -174,6 +185,9 @@ function CourseTasksPage() {
     )
   }
 
+  const allAnswered = questions.length > 0 && questions.every((q) => submitted[q.id])
+  const currentQuestion = questions[currentQuestionIndex]
+
   return (
     <div className="min-h-[calc(100vh-4rem)] p-8">
       <div className="max-w-4xl mx-auto">
@@ -191,9 +205,10 @@ function CourseTasksPage() {
           <div className="bg-white rounded-lg shadow-md p-8">
             <p className="text-gray-600">No questions generated. Please try again.</p>
           </div>
-        ) : (
+        ) : currentQuestion ? (
           <div className="space-y-6">
-            {questions.map((question, index) => {
+            {(() => {
+              const question = currentQuestion
               const isSubmitted = submitted[question.id]
               const showResult = showResults[question.id]
               const userAnswer = answers[question.id]
@@ -206,7 +221,7 @@ function CourseTasksPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <span className="text-sm font-semibold text-gray-500">
-                          Question {index + 1} of {questions.length}
+                          Question {currentQuestionIndex + 1} of {questions.length}
                         </span>
                         <span
                           className={`text-xs px-2 py-1 rounded ${
@@ -318,9 +333,28 @@ function CourseTasksPage() {
                   )}
                 </div>
               )
-            })}
+            })()}
 
-            {questions.every((q) => submitted[q.id]) && (
+            <div className="flex items-center justify-between">
+              <button
+                onClick={goToPreviousQuestion}
+                disabled={currentQuestionIndex === 0}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed font-medium"
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={goToNextQuestion}
+                  disabled={currentQuestionIndex === questions.length - 1}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+
+            {allAnswered && (
               <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="mb-4">
                   <p className="text-lg font-semibold text-gray-900 mb-2">All Done! 🎉</p>
@@ -337,7 +371,7 @@ function CourseTasksPage() {
               </div>
             )}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   )

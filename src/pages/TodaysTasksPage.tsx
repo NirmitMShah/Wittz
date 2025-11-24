@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { getCourses } from '../lib/courses'
-import type { Course } from '../types/course'
+import { getCourses, getLowestMasteryContent } from '../lib/courses'
+import { appConfig } from '../config/appConfig'
+import type { Course, CourseContent } from '../types/course'
 
 function TodaysTasksPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [courses, setCourses] = useState<Course[]>([])
+  const [blurtTasks, setBlurtTasks] = useState<(CourseContent & { course: Course })[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -24,6 +26,16 @@ function TodaysTasksPage() {
       if (error) throw error
       setCourses(data || [])
       setError(null)
+
+      // Fetch the lowest mastery content for Blurt task for each course
+      const { data: blurtData, error: blurtError } = await getLowestMasteryContent(
+        appConfig.blurtTask.masteryThreshold
+      )
+      if (blurtError) {
+        console.error('Failed to load blurt tasks:', blurtError)
+      } else {
+        setBlurtTasks(blurtData || [])
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to load courses')
     } finally {
@@ -66,6 +78,27 @@ function TodaysTasksPage() {
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Blurt Tasks (one per course with a low-mastery lecture) */}
+            {blurtTasks.map((task) => (
+              <div
+                key={task.id}
+                onClick={() => navigate(`/blurt/${task.id}`)}
+                className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow w-full cursor-pointer"
+              >
+                <div className="flex items-center gap-4">
+                  <div
+                    className="w-5 h-5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: task.course.color }}
+                  />
+                  <div className="flex-1">
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      Blurt Task - {task.name}
+                    </h3>
+                  </div>
+                </div>
+              </div>
+            ))}
+
             {/* Diagnostic Tasks */}
             {courses
               .filter((course) => !course.diagnostic_taken)
@@ -107,7 +140,14 @@ function TodaysTasksPage() {
                     style={{ backgroundColor: course.color }}
                   />
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-900">{course.name}</h3>
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      {course.name}
+                      {course.mastery !== undefined && (
+                        <span className="ml-2 text-sm font-normal text-gray-600">
+                          ({course.mastery}% mastery)
+                        </span>
+                      )}
+                    </h3>
                   </div>
                   <p className="text-sm text-gray-400">
                     Created {new Date(course.created_at).toLocaleDateString()}

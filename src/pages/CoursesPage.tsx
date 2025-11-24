@@ -177,7 +177,14 @@ function CoursesPage() {
                     Delete
                   </button>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{course.name}</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  {course.name}
+                  {course.mastery !== undefined && (
+                    <span className="ml-2 text-sm font-normal text-gray-600">
+                      ({course.mastery}% mastery)
+                    </span>
+                  )}
+                </h3>
                 <p className="text-xs text-gray-400">
                   Created {new Date(course.created_at).toLocaleDateString()}
                 </p>

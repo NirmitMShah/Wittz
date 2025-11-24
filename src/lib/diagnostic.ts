@@ -1,3 +1,4 @@
+import { appConfig } from '../config/appConfig'
 import type { CourseContent, DiagnosticQuestion } from '../types/course'
 
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY
@@ -24,15 +25,17 @@ export async function generateQuestionsForLecture(
     throw new Error('OpenAI API key is not configured. Please set VITE_OPENAI_API_KEY in your .env file.')
   }
 
-  const systemPrompt = `You are an expert educational assessment designer. Generate 2-4 diagnostic questions based on the provided lecture content.
+  const { questionsPerLecture, questionTypeDistribution, difficultyDistribution } = appConfig.diagnostic
+
+  const systemPrompt = `You are an expert educational assessment designer. Generate ${questionsPerLecture.min}-${questionsPerLecture.max} diagnostic questions based on the provided lecture content.
 
 ## Guidelines:
-1. Generate 2-4 questions per lecture (adjust based on content depth)
-2. Mix question types: 60-70% multiple choice, 20-30% short answer, 10% true/false
+1. Generate ${questionsPerLecture.min}-${questionsPerLecture.max} questions per lecture (adjust based on content depth)
+2. Mix question types: ${questionTypeDistribution.multipleChoice.min}-${questionTypeDistribution.multipleChoice.max}% multiple choice, ${questionTypeDistribution.shortAnswer.min}-${questionTypeDistribution.shortAnswer.max}% short answer, ${questionTypeDistribution.trueFalse}% true/false
 3. Questions should test understanding, not just memorization
 4. Each question should have one clearly correct answer
 5. Include explanations for correct answers
-6. Distribute difficulty: 30% easy, 50% medium, 20% hard
+6. Distribute difficulty: ${difficultyDistribution.easy}% easy, ${difficultyDistribution.medium}% medium, ${difficultyDistribution.hard}% hard
 
 ## Output Format (JSON):
 {
@@ -71,7 +74,7 @@ ${lecture.content}`
           { role: 'user', content: userPrompt },
         ],
         response_format: { type: 'json_object' },
-        temperature: 0.7,
+        temperature: appConfig.diagnostic.openai.temperature,
       }),
     })
 
