@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { getCourses, createCourse, updateCourse, deleteCourse } from '../lib/courses'
+import { getCourses, createCourse, deleteCourse } from '../lib/courses'
 import type { Course, CreateCourseInput } from '../types/course'
 
 function CoursesPage() {
