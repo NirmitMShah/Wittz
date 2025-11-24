@@ -155,6 +155,25 @@ function TodaysTasksPage() {
                 </div>
               </div>
             ))}
+
+            {/* Interleaved Practice */}
+            {courses.length > 0 && (
+              <div
+                onClick={() => navigate('/tasks/interleaved')}
+                className="bg-indigo-600 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow w-full cursor-pointer"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-xl font-semibold text-white">Interleaved Practice</h3>
+                    <p className="mt-1 text-sm text-indigo-100">
+                      Generate a single practice session that mixes questions from all of today&apos;s
+                      courses.
+                    </p>
+                  </div>
+                  <span className="text-sm font-medium text-indigo-100">Start →</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

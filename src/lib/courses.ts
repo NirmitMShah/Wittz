@@ -181,6 +181,19 @@ export async function deleteCourseContent(id: string): Promise<{ error: any }> {
 }
 
 /**
+ * Get a single course content (lecture) by ID
+ */
+export async function getCourseContentById(id: string): Promise<{ data: CourseContent | null; error: any }> {
+  const { data, error } = await supabase
+    .from('course_contents')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  return { data, error }
+}
+
+/**
  * Get the lowest mastery course content below a threshold for each course
  * Returns one course content per course (the lowest mastery lecture under the threshold)
  */

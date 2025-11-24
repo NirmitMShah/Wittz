@@ -10,6 +10,7 @@ import DiagnosticPage from './pages/DiagnosticPage'
 import BlurtTaskPage from './pages/BlurtTaskPage'
 import LoginPage from './pages/LoginPage'
 import SignUpPage from './pages/SignUpPage'
+import InterleavedPracticePage from './pages/InterleavedPracticePage'
 
 function App() {
   return (
@@ -65,6 +66,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <BlurtTaskPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tasks/interleaved"
+              element={
+                <ProtectedRoute>
+                  <InterleavedPracticePage />
                 </ProtectedRoute>
               }
             />
