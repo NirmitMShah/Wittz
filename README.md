@@ -51,3 +51,31 @@ import { supabase } from '../lib/supabase'
 
 Make sure to add your Supabase credentials to the `.env` file before running the app.
 
+### Database Setup
+
+1. **Create the courses table:**
+   - Go to your Supabase project dashboard
+   - Navigate to the SQL Editor
+   - Copy and paste the contents of `supabase/migrations/001_create_courses_table.sql`
+   - Run the migration
+
+   This will create:
+   - A `courses` table with columns: `id`, `user_id`, `name`, `description`, `color`, `created_at`, `updated_at`
+   - Row Level Security (RLS) policies so users can only access their own courses
+   - An automatic trigger to update the `updated_at` timestamp
+
+2. **Using the courses API:**
+   ```typescript
+   import { getCourses, createCourse, updateCourse, deleteCourse } from '../lib/courses'
+   
+   // Get all courses for the current user
+   const { data, error } = await getCourses()
+   
+   // Create a new course
+   const { data, error } = await createCourse({
+     name: 'My Course',
+     description: 'Course description',
+     color: '#3B82F6'
+   })
+   ```
+

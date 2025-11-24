@@ -4,6 +4,8 @@ import Navbar from './components/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
 import TodaysTasksPage from './pages/TodaysTasksPage'
 import CoursesPage from './pages/CoursesPage'
+import CourseDetailPage from './pages/CourseDetailPage'
+import DiagnosticPage from './pages/DiagnosticPage'
 import LoginPage from './pages/LoginPage'
 import SignUpPage from './pages/SignUpPage'
 
@@ -29,6 +31,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CoursesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/courses/:courseId"
+              element={
+                <ProtectedRoute>
+                  <CourseDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/diagnostic/:courseId"
+              element={
+                <ProtectedRoute>
+                  <DiagnosticPage />
                 </ProtectedRoute>
               }
             />

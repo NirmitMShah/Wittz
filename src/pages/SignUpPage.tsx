@@ -16,16 +16,21 @@ function SignUpPage() {
     setError(null)
     setLoading(true)
 
-    const { error } = await signUp(email, password)
+    const { data, error } = await signUp(email, password)
 
     if (error) {
       setError(error.message)
       setLoading(false)
     } else {
-      setSuccess(true)
-      setTimeout(() => {
+      // If email confirmation is disabled, user will be signed in immediately
+      if (data?.session) {
         navigate('/')
-      }, 2000)
+      } else {
+        setSuccess(true)
+        setTimeout(() => {
+          navigate('/')
+        }, 2000)
+      }
     }
   }
 
