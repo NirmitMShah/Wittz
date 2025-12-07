@@ -1,10 +1,14 @@
 'use client'
 
 import { useState, FormEvent, useRef, useEffect } from 'react'
-import MarkdownRenderer from '@/components/MarkdownRenderer'
+import Link from 'next/link'
+import InteractiveMarkdownRenderer from '@/components/InteractiveMarkdownRenderer'
 
 export default function Home() {
   const [topic, setTopic] = useState('')
+  const [showPersonalization, setShowPersonalization] = useState(false)
+  const [knowledgeLevel, setKnowledgeLevel] = useState('')
+  const [goal, setGoal] = useState('')
   const [answer, setAnswer] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +42,11 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ topic: topic.trim() }),
+        body: JSON.stringify({ 
+          topic: topic.trim(),
+          knowledgeLevel: knowledgeLevel.trim(),
+          goal: goal.trim()
+        }),
       })
 
       if (!response.ok) {
@@ -129,6 +137,21 @@ export default function Home() {
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_80%_70%,rgba(236,72,153,0.15)_0%,transparent_50%)] pointer-events-none" />
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(79,172,254,0.1)_0%,transparent_60%)] pointer-events-none" />
       
+      {/* Build Button - Top Right */}
+      <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-20">
+        <Link
+          href="/build"
+          className="group relative px-6 py-3 text-white rounded-full font-semibold text-base transition-all duration-300 shadow-md hover:shadow-xl hover:scale-[1.05] active:scale-[0.98] overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+            boxShadow: '0 10px 25px -5px rgba(99, 102, 241, 0.4), 0 10px 10px -5px rgba(118, 75, 162, 0.2)',
+          }}
+        >
+          <span className="absolute inset-0 bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <span className="relative z-10">Build</span>
+        </Link>
+      </div>
+      
       <div 
         className={`relative z-10 flex-1 flex flex-col items-center px-4 sm:px-6 lg:px-8 pb-12 w-full max-w-5xl mx-auto transition-all duration-700 ease-out ${
           hasSubmitted ? 'justify-start pt-4 sm:pt-6' : 'justify-center pt-4'
@@ -167,7 +190,7 @@ export default function Home() {
         >
           <form onSubmit={handleSubmit} className="mb-8">
             {/* Textbox with racetrack border */}
-            <div className="mb-6 relative animate-float">
+            <div className="mb-4 relative animate-float">
               <textarea
                 ref={textareaRef}
                 value={topic}
@@ -184,6 +207,65 @@ export default function Home() {
               />
               <div className="absolute inset-0 rounded-full pointer-events-none border-2 border-transparent transition-all duration-300" />
             </div>
+
+            {/* Personalization Questions Toggle */}
+            <div className="mb-4 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowPersonalization(!showPersonalization)}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg
+                  className={`w-5 h-5 transition-transform duration-200 ${showPersonalization ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+                Personalization Questions
+              </button>
+            </div>
+
+            {/* Personalization Questions Section */}
+            {showPersonalization && (
+              <div className="mb-6 bg-white/80 backdrop-blur-sm rounded-2xl border-2 border-indigo-200 p-6 shadow-md animate-fade-in">
+                <div className="space-y-5">
+                  {/* Knowledge Level Question */}
+                  <div>
+                    <label htmlFor="knowledgeLevel" className="block text-sm font-semibold text-neutral-700 mb-2">
+                      What is your current knowledge level on this topic?
+                    </label>
+                    <input
+                      type="text"
+                      id="knowledgeLevel"
+                      value={knowledgeLevel}
+                      onChange={(e) => setKnowledgeLevel(e.target.value)}
+                      placeholder="e.g., Beginner, Intermediate, Advanced, or describe your background"
+                      disabled={isLoading}
+                      className="w-full px-4 py-3 bg-white text-neutral-900 border-2 border-indigo-200 rounded-xl text-base transition-all duration-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 hover:border-purple-300 shadow-sm hover:shadow-md outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
+
+                  {/* Goal Question */}
+                  <div>
+                    <label htmlFor="goal" className="block text-sm font-semibold text-neutral-700 mb-2">
+                      What is your learning goal?
+                    </label>
+                    <input
+                      type="text"
+                      id="goal"
+                      value={goal}
+                      onChange={(e) => setGoal(e.target.value)}
+                      placeholder="e.g., Understanding the basics, Preparing for an exam, Applying in practice"
+                      disabled={isLoading}
+                      className="w-full px-4 py-3 bg-white text-neutral-900 border-2 border-indigo-200 rounded-xl text-base transition-all duration-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 hover:border-purple-300 shadow-sm hover:shadow-md outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Submit Button */}
             <div className="flex justify-center">
@@ -251,7 +333,7 @@ export default function Home() {
           {answer && (
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-indigo-100 p-8 md:p-10 shadow-xl animate-fade-in mt-4" style={{ boxShadow: '0 20px 25px -5px rgba(99, 102, 241, 0.1), 0 10px 10px -5px rgba(99, 102, 241, 0.04)' }}>
               <div className="prose prose-neutral max-w-none">
-                <MarkdownRenderer content={answer} />
+                <InteractiveMarkdownRenderer content={answer} />
               </div>
             </div>
           )}
