@@ -129,20 +129,15 @@ export default function Home() {
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_80%_70%,rgba(236,72,153,0.15)_0%,transparent_50%)] pointer-events-none" />
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(79,172,254,0.1)_0%,transparent_60%)] pointer-events-none" />
       
-      {/* Decorative colorful blobs */}
-      <div className="fixed top-0 left-0 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob pointer-events-none" />
-      <div className="fixed top-0 right-0 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000 pointer-events-none" />
-      <div className="fixed bottom-0 left-1/2 w-96 h-96 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000 pointer-events-none" />
-      
       <div 
         className={`relative z-10 flex-1 flex flex-col items-center px-4 sm:px-6 lg:px-8 pb-12 w-full max-w-5xl mx-auto transition-all duration-700 ease-out ${
-          hasSubmitted ? 'justify-start pt-8 sm:pt-12' : 'justify-center pt-8'
+          hasSubmitted ? 'justify-start pt-4 sm:pt-6' : 'justify-center pt-4'
         }`}
       >
         {/* Header */}
         <div 
           className={`text-center w-full transition-all duration-700 ease-out ${
-            hasSubmitted ? 'mb-8' : 'mb-20'
+            hasSubmitted ? 'mb-6' : 'mb-8'
           } ${!hasSubmitted ? 'animate-fade-in' : ''}`}
         >
           <h1 
@@ -172,7 +167,7 @@ export default function Home() {
         >
           <form onSubmit={handleSubmit} className="mb-8">
             {/* Textbox with racetrack border */}
-            <div className="mb-6 relative">
+            <div className="mb-6 relative animate-float">
               <textarea
                 ref={textareaRef}
                 value={topic}
@@ -195,14 +190,15 @@ export default function Home() {
               <button
                 type="submit"
                 disabled={!topic.trim() || isLoading}
-                className="group relative px-10 py-4 disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed text-white rounded-full font-semibold text-base transition-all duration-300 disabled:opacity-60 shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:hover:shadow-md overflow-hidden"
+                className="group relative px-12 py-5 disabled:cursor-not-allowed text-white rounded-full font-semibold text-lg transition-all duration-300 shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:hover:shadow-md overflow-hidden"
                 style={{
                   background: !topic.trim() || isLoading 
-                    ? undefined 
+                    ? 'linear-gradient(135deg, #c7d2fe 0%, #ddd6fe 50%, #fbcfe8 100%)'
                     : 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
                   boxShadow: !topic.trim() || isLoading 
-                    ? undefined
+                    ? '0 10px 25px -5px rgba(99, 102, 241, 0.2), 0 10px 10px -5px rgba(118, 75, 162, 0.1)'
                     : '0 10px 25px -5px rgba(99, 102, 241, 0.4), 0 10px 10px -5px rgba(118, 75, 162, 0.2)',
+                  opacity: !topic.trim() || isLoading ? 0.7 : 1,
                 }}
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -232,7 +228,7 @@ export default function Home() {
                       Thinking...
                     </>
                   ) : (
-                    'Submit'
+                    'Teach me'
                   )}
                 </span>
               </button>
