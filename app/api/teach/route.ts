@@ -1,29 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
-// Toggle to enable/disable image generation
-const ENABLE_IMAGE_GENERATION = false
-
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
-
-// Helper function to generate an image from a prompt
-async function generateImage(prompt: string): Promise<string | null> {
-  try {
-    const response = await openai.images.generate({
-      model: 'dall-e-3',
-      prompt: prompt.trim(),
-      size: '1024x1024',
-      quality: 'standard',
-      response_format: 'url',
-    })
-    return response.data?.[0]?.url || null
-  } catch (error) {
-    console.error('Error generating image:', error)
-    return null
-  }
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -63,7 +43,6 @@ Always respond in GitHub-flavored **markdown** formatted like a ChatGPT answer:
   - Block math: wrap displayed equations in \`$$...$$\` (double dollar signs) for centered equations on their own line.
   - Block math example: \`$$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$\`
   - **DO NOT** use parentheses like \`(x^2 = -1)\` - always use dollar signs: \`$x^2 = -1$\`
-${ENABLE_IMAGE_GENERATION ? '- **IMAGES**: **REQUIRED** - You MUST include at least one image placeholder in every response. Include a special placeholder in this exact format: `![IMAGE_PLACEHOLDER: detailed description of what the image should show]`. The description should be detailed, specific, and educational - describe exactly what visual would help the student understand the concept better. Use this for diagrams, processes, structures, comparisons, or any concept that benefits from visual representation. Place the placeholder right after the text that introduces the most important concept that would benefit from visualization. If multiple concepts could use visuals, include multiple placeholders.' : ''}
 
 Do NOT include JSON or metadata — only the final formatted explanation.`,
           },
@@ -93,79 +72,7 @@ Do NOT include JSON or metadata — only the final formatted explanation.`,
             }
           }
 
-          // After text streaming is complete, check for image placeholders and generate images
-          if (ENABLE_IMAGE_GENERATION) {
-            const imagePlaceholderRegex = /!\[IMAGE_PLACEHOLDER:\s*(.+?)\]/g
-            let match
-            const imageTasks: Array<{ placeholder: string; description: string; index: number }> = []
-            let placeholderIndex = 0
-
-            // Collect all image placeholders
-            while ((match = imagePlaceholderRegex.exec(accumulatedContent)) !== null) {
-              imageTasks.push({
-                placeholder: match[0],
-                description: match[1].trim(),
-                index: placeholderIndex++,
-              })
-            }
-
-            // Generate images for all placeholders in parallel
-            let imagesGenerated = 0
-            if (imageTasks.length > 0) {
-              // Send a signal that we're generating images
-              const generatingData = JSON.stringify({ 
-                type: 'generating_images', 
-                count: imageTasks.length 
-              }) + '\n'
-              controller.enqueue(encoder.encode(generatingData))
-
-              // Generate all images in parallel
-              const imagePromises = imageTasks.map(async (task) => {
-                const imageUrl = await generateImage(task.description)
-                return { ...task, imageUrl }
-              })
-
-              const imageResults = await Promise.all(imagePromises)
-
-              // Replace placeholders with actual image markdown
-              for (const result of imageResults) {
-                if (result.imageUrl) {
-                  // Replace placeholder with actual image markdown
-                  accumulatedContent = accumulatedContent.replace(
-                    result.placeholder,
-                    `![${result.description}](${result.imageUrl})`
-                  )
-                  imagesGenerated++
-                } else {
-                  // Remove placeholder if image generation failed
-                  accumulatedContent = accumulatedContent.replace(result.placeholder, '')
-                }
-              }
-            }
-
-            // Ensure at least one image is generated - generate a default if none were found
-            if (imagesGenerated === 0) {
-              const generatingData = JSON.stringify({ 
-                type: 'generating_images', 
-                count: 1 
-              }) + '\n'
-              controller.enqueue(encoder.encode(generatingData))
-
-              // Generate a default educational image based on the topic
-              const defaultImagePrompt = `An educational diagram or illustration explaining: ${topic.trim()}. Make it clear, informative, and visually appealing.`
-              const defaultImageUrl = await generateImage(defaultImagePrompt)
-              
-              if (defaultImageUrl) {
-                // Insert the image at the beginning of the content
-                accumulatedContent = `![Educational diagram for ${topic.trim()}](${defaultImageUrl})\n\n${accumulatedContent}`
-              }
-            }
-          } else {
-            // Remove any image placeholders if image generation is disabled
-            accumulatedContent = accumulatedContent.replace(/!\[IMAGE_PLACEHOLDER:\s*(.+?)\]/g, '')
-          }
-
-          // Send completion signal with final content (including generated images)
+          // Send completion signal with final content
           const completionData = JSON.stringify({ 
             type: 'done', 
             fullContent: accumulatedContent 
