@@ -7,6 +7,7 @@ export default function Home() {
   const [topic, setTopic] = useState('')
   const [answer, setAnswer] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isGeneratingImages, setIsGeneratingImages] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasSubmitted, setHasSubmitted] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -29,6 +30,7 @@ export default function Home() {
     // Move form to top immediately on submit
     setHasSubmitted(true)
     setIsLoading(true)
+    setIsGeneratingImages(false)
     setError(null)
     setAnswer('')
 
@@ -91,10 +93,14 @@ export default function Home() {
             if (data.type === 'chunk') {
               // Append chunk to answer
               setAnswer((prev) => (prev || '') + data.content)
+            } else if (data.type === 'generating_images') {
+              // Images are being generated
+              setIsGeneratingImages(true)
             } else if (data.type === 'done') {
-              // Text streaming complete
+              // Text streaming complete, images have been generated and inserted
               setAnswer(data.fullContent)
               setIsLoading(false)
+              setIsGeneratingImages(false)
               return
             } else if (data.type === 'error') {
               throw new Error(data.error || 'Streaming error')
@@ -108,9 +114,11 @@ export default function Home() {
 
       // Fallback: ensure loading state is cleared when stream ends
       setIsLoading(false)
+      setIsGeneratingImages(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
       setIsLoading(false)
+      setIsGeneratingImages(false)
     }
   }
 
@@ -252,6 +260,42 @@ export default function Home() {
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-indigo-100 p-8 md:p-10 shadow-xl animate-fade-in mt-4" style={{ boxShadow: '0 20px 25px -5px rgba(99, 102, 241, 0.1), 0 10px 10px -5px rgba(99, 102, 241, 0.04)' }}>
               <div className="prose prose-neutral max-w-none">
                 <MarkdownRenderer content={answer} />
+              </div>
+            </div>
+          )}
+
+          {/* Image generation indicator */}
+          {isGeneratingImages && answer && (
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-purple-100 p-6 text-center shadow-lg animate-fade-in mt-4" style={{ boxShadow: '0 20px 25px -5px rgba(139, 92, 246, 0.1), 0 10px 10px -5px rgba(139, 92, 246, 0.04)' }}>
+              <div className="inline-flex flex-col items-center gap-3">
+                <div className="relative">
+                  <svg
+                    className="animate-spin h-6 w-6"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="#764ba2"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="#764ba2"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                </div>
+                <span className="font-medium text-sm" style={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>Generating images...</span>
               </div>
             </div>
           )}

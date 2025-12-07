@@ -37,10 +37,53 @@ function isInsideMathDelimiters(content: string, startPos: number, endPos: numbe
 
 // Preprocess content to fix math expressions
 function preprocessMath(content: string): string {
-  // First, protect existing math expressions by temporarily replacing them
-  const mathPlaceholders: Array<{ placeholder: string; original: string }> = []
+  // First, protect image markdown to prevent processing math inside URLs
+  const imagePlaceholders: Array<{ placeholder: string; original: string }> = []
   let processed = content
   let placeholderIndex = 0
+
+  // Protect image markdown (![alt](url)) first - must be before code blocks
+  processed = processed.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match) => {
+    const placeholder = `__IMAGE_${placeholderIndex}__`
+    imagePlaceholders.push({ placeholder, original: match })
+    placeholderIndex++
+    return placeholder
+  })
+
+  // Then protect code blocks (both inline and block) to prevent processing math inside them
+  const codePlaceholders: Array<{ placeholder: string; original: string }> = []
+
+  // Protect code blocks (```...```) first
+  processed = processed.replace(/```[\s\S]*?```/g, (match) => {
+    const placeholder = `__CODE_BLOCK_${placeholderIndex}__`
+    codePlaceholders.push({ placeholder, original: match })
+    placeholderIndex++
+    return placeholder
+  })
+
+  // Protect inline code (`...`) - but not if it's part of a code block
+  const inlineCodeRegex = /`[^`\n]+?`/g
+  const inlineCodeMatches: Array<{ match: string; index: number }> = []
+  let inlineCodeMatch
+  const tempForCode = processed
+  while ((inlineCodeMatch = inlineCodeRegex.exec(tempForCode)) !== null) {
+    inlineCodeMatches.push({
+      match: inlineCodeMatch[0],
+      index: inlineCodeMatch.index
+    })
+  }
+
+  // Replace inline code in reverse order
+  for (let i = inlineCodeMatches.length - 1; i >= 0; i--) {
+    const { match, index } = inlineCodeMatches[i]
+    const placeholder = `__CODE_INLINE_${placeholderIndex}__`
+    codePlaceholders.push({ placeholder, original: match })
+    processed = processed.substring(0, index) + placeholder + processed.substring(index + match.length)
+    placeholderIndex++
+  }
+
+  // Now protect existing math expressions by temporarily replacing them
+  const mathPlaceholders: Array<{ placeholder: string; original: string }> = []
 
   // Protect block math ($$...$$) first
   processed = processed.replace(/\$\$([^$]+)\$\$/g, (match) => {
@@ -141,6 +184,18 @@ function preprocessMath(content: string): string {
   // Restore protected math expressions in reverse order
   for (let i = mathPlaceholders.length - 1; i >= 0; i--) {
     const { placeholder, original } = mathPlaceholders[i]
+    processed = processed.replace(placeholder, original)
+  }
+
+  // Restore protected code blocks in reverse order
+  for (let i = codePlaceholders.length - 1; i >= 0; i--) {
+    const { placeholder, original } = codePlaceholders[i]
+    processed = processed.replace(placeholder, original)
+  }
+
+  // Restore protected image markdown in reverse order (after code blocks)
+  for (let i = imagePlaceholders.length - 1; i >= 0; i--) {
+    const { placeholder, original } = imagePlaceholders[i]
     processed = processed.replace(placeholder, original)
   }
 
