@@ -3,77 +3,109 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #0f0f23;
-  --bg-secondary: #1a1a2e;
-  --text-primary: #ececf1;
-  --text-secondary: #8e8ea0;
-  --border-color: #40414f;
-  --code-bg: #1e1e1e;
-  --blockquote-border: #565869;
+  --bg-primary: #fafafa;
+  --bg-secondary: #ffffff;
+  --text-primary: #0a0a0a;
+  --text-secondary: #525252;
+  --border-color: #e5e5e5;
+  --code-bg: #f5f5f5;
+  --blockquote-border: #d4d4d4;
+  --accent-primary: #6366f1;
+  --accent-secondary: #8b5cf6;
+  --accent-tertiary: #ec4899;
+  --accent-hover: #4f46e5;
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-colorful: 0 10px 30px -5px rgba(99, 102, 241, 0.3);
 }
 
 body {
-  background-color: var(--bg-primary);
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 25%, #f093fb15 50%, #f5576c15 75%, #4facfe15 100%);
+  background-attachment: fixed;
   color: var(--text-primary);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ChatGPT-like markdown styling */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Refined markdown styling for light theme */
 .markdown-content {
-  @apply text-[15px] leading-[1.75] text-[#ececf1];
+  @apply text-[15px] md:text-[16px] leading-[1.75] text-black;
+  font-feature-settings: 'kern' 1, 'liga' 1;
 }
 
 .markdown-content p {
-  @apply mb-4;
+  @apply mb-5 text-black;
 }
 
 .markdown-content h1 {
-  @apply text-2xl font-semibold mb-4 mt-6;
+  @apply text-2xl md:text-3xl font-bold mb-5 mt-8 text-black tracking-tight;
 }
 
 .markdown-content h2 {
-  @apply text-xl font-semibold mb-3 mt-5;
+  @apply text-xl md:text-2xl font-bold mb-4 mt-7 text-black tracking-tight;
 }
 
 .markdown-content h3 {
-  @apply text-lg font-semibold mb-2 mt-4;
+  @apply text-lg md:text-xl font-semibold mb-3 mt-6 text-black tracking-tight;
 }
 
 .markdown-content ul,
 .markdown-content ol {
-  @apply mb-4 ml-6;
+  @apply mb-5 ml-6 space-y-2;
 }
 
 .markdown-content li {
-  @apply mb-2;
+  @apply mb-1.5;
 }
 
 .markdown-content ul li {
   @apply list-disc;
 }
 
+.markdown-content ul li::marker {
+  color: #000000;
+}
+
 .markdown-content ol li {
   @apply list-decimal;
 }
 
+.markdown-content ol li::marker {
+  color: #000000;
+  font-weight: 600;
+}
+
 .markdown-content blockquote {
-  @apply border-l-4 border-[#565869] pl-4 py-2 my-4 bg-[#1a1a2e] rounded-r;
+  @apply border-l-4 border-gray-300 pl-5 py-3 my-5 bg-gray-50 rounded-r-lg text-gray-700 italic;
 }
 
 .markdown-content code {
-  @apply bg-[#1e1e1e] text-[#ececf1] px-1.5 py-0.5 rounded text-sm font-mono;
+  @apply bg-gray-100 text-black px-1.5 py-0.5 rounded-md text-[0.9em] font-mono;
+  font-feature-settings: normal;
+  border: 1px solid #e5e7eb;
 }
 
 .markdown-content pre {
-  @apply bg-[#1e1e1e] p-4 rounded-lg overflow-x-auto mb-4;
+  @apply bg-gray-900 text-white p-5 rounded-xl overflow-x-auto mb-5 shadow-lg border border-gray-800;
 }
 
 .markdown-content pre code {
-  @apply bg-transparent p-0;
+  @apply bg-transparent p-0 text-white;
 }
 
 .markdown-content strong {
-  @apply font-semibold;
+  @apply font-semibold text-neutral-900;
 }
 
 .markdown-content em {
@@ -81,16 +113,20 @@ body {
 }
 
 .markdown-content a {
-  @apply text-blue-400 hover:underline;
+  @apply text-black hover:text-gray-700 hover:underline transition-colors duration-200 font-medium;
 }
 
-/* KaTeX math rendering styles for dark theme */
+.markdown-content hr {
+  @apply my-8 border-0 border-t border-neutral-200;
+}
+
+/* KaTeX math rendering styles - black and white */
 .markdown-content .katex {
-  @apply text-[#ececf1];
+  @apply text-black;
 }
 
 .markdown-content .katex .mathnormal {
-  @apply text-[#ececf1];
+  @apply text-black;
 }
 
 .markdown-content .katex-display {
@@ -99,5 +135,81 @@ body {
 
 .markdown-content .katex-display > .katex {
   @apply text-center;
+}
+
+/* Hide scrollbar for textarea */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
+
+/* Smooth animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  opacity: 0;
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-slide-up {
+  opacity: 0;
+  animation: slideUp 0.6s ease-out forwards;
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animated blob for background */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
 }
 
